@@ -11,24 +11,20 @@
  * GNU General Public License for more details.
  */
 
-/dts-v1/;
 
 #include "msm8909-mtp.dtsi"
 #include "msm8909-pm8916.dtsi"
 #include "msm8909-pm8916-mtp.dtsi"
 #include "apq8009-audio-external_codec.dtsi"
-#include "apq8009-dragon.dtsi"
 
-/ {
-	model = "Qualcomm Technologies, Inc. APQ8009 Dragon Board";
-	compatible = "qcom,apq8009-mtp", "qcom,apq8009", "qcom,mtp";
-	qcom,msm-id = <265 2>;
-	qcom,board-id= <32 0x0>;
+&audio_codec_mtp {
+	status = "disabled";
 };
 
 &soc {
-	ext-codec {
-		qcom,msm-mbhc-hphl-swh = <0>;
+	sound-9335 {
+		qcom,model = "apq8009-tashalite-snd-card-tdm";
+		qcom,tdm-i2s-switch-enable = <&msm_gpio 88 0>;
 		qcom,audio-routing =
 			"AIF4 VI", "MCLK",
 			"RX_BIAS", "MCLK",
@@ -47,14 +43,30 @@
 			"SpkrRight IN", "SPK2 OUT";
 	};
 
-	sound-9335 {
-		status = "disabled";
-	};
-
 	i2c@78b8000 {
 		wcd9xxx_codec@d {
-		  status = "disabled";
+			qcom,wcd9xxx-mic-tristate;
+			qcom,cdc-reset-gpio = <&msm_gpio 23 0>;
+
+			cdc-vdd-buck-supply = <&wcd_vdd_buck_1p8>;
+			qcom,cdc-vdd-buck-voltage = <0 0>;
+			qcom,cdc-vdd-buck-current = <250000>;
+
+			cdc-buck-sido-supply = <&wcd_vdd_buck_1p8>;
+			qcom,cdc-buck-sido-voltage = <0 0>;
+			qcom,cdc-buck-sido-current = <250000>;
 		};
+	};
+
+	wcd_vdd_buck_1p8: wcd_vdd_buck_1p8 {
+		compatible = "regulator-fixed";
+		regulator-name = "wcd_vdd_buck_1p8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		status = "ok";
+		enable-active-high;
+		gpio = <&pm8916_gpios 4 0>;
+		vin-supply = <&pm8916_s4>;
 	};
 
 	vph_pwr_vreg: vph_pwr_vreg {
@@ -66,6 +78,30 @@
 
 	mdss_mdp: qcom,mdss_mdp@1a00000 {
 		status = "disabled";
+	};
+
+	bluetooth: bt_qca9379 {
+		compatible = "qca,qca9379";
+		qca,bt-reset-gpio = <&msm_gpio 47 0>; /* BT_EN */
+	};
+};
+
+&blsp1_uart2_tx_active {
+	mux {
+		function = "blsp_uart2";
+	};
+};
+
+&blsp1_uart2_rxcts_active {
+	mux {
+		function = "blsp_uart2";
+	};
+};
+
+
+&blsp1_uart2_rfr_active {
+	mux {
+		function = "blsp_uart2";
 	};
 };
 
@@ -113,19 +149,18 @@
 	};
 };
 
+&pm8916_gpios {
+	gpio@c300 {
+		qcom,mode = <1>;        /* DIGITAL OUT */
+		qcom,pull = <1>;        /* No Pull */
+		qcom,vin-sel = <2>;     /* 1.8 */
+		qcom,src-sel = <0>;     /* CONSTANT */
+		qcom,master-en = <1>;   /* ENABLE GPIO */
+		status = "okay";
+	};
+};
+
 &pm8916_bms {
 	status = "ok";
 	qcom,disable-bms;
-	qcom,board-id= <0x00010020 0>;
-};
-
-&blsp1_uart2_hs {
-	status = "okay";
-};
-
-&i2c_2 {
-	status = "disabled";
-	nq@28 {
-		status = "disabled";
-	};
 };
